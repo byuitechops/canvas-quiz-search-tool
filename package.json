@@ -1,0 +1,22 @@
+{
+  "name": "quiz-feedback",
+  "version": "1.0.0",
+  "description": "",
+  "main": "find-feedback.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^2.6.0",
+    "canvas-wrapper": "github:byuitechops/canvas-wrapper",
+    "cheerio": "^1.0.0-rc.2",
+    "d3-dsv": "^1.0.8",
+    "enquirer": "^1.0.3",
+    "logger": "github:byuitechops/logger",
+    "prompt": "^1.0.0",
+    "prompt-checkbox": "^2.2.0",
+    "prompt-radio": "^1.2.1"
+  }
+}

@@ -1,36 +1,11 @@
 const canvas = require('canvas-wrapper');
 const asyncLib = require('async');
 const Logger = require('logger');
-const Enquirer = require('enquirer');
-const QuizSearch = require('./quizSearch.js')
 
-var enquirer = new Enquirer();
-var test;
-async function promptUser() {
-    enquirer.question('numCourses', 'Number of courses:', {});
-    var answers = await enquirer.ask();
-    var courseObjects = [];
-    console.clear();
-    var count;
-    for (var i = 0; i < answers.numCourses; i++) {
-        if (i < 9) {
-            count = '0' + (i + 1);
-        } else {
-            count = i + 1;
-        }
-        enquirer = new Enquirer();
-        enquirer.question('canvasID', `Canvas Course ID - ${count}:`, { 'default': '' });
-        courseObjects.push(await enquirer.ask());
-    }
-    console.clear();
-    var courseIDs = [];
-    courseObjects.forEach(currentCourse => {
-        courseIDs.push(currentCourse.canvasID);
-    });
-    return courseIDs;
-};
-promptUser().then(async courseIDs => {
-    asyncLib.each(courseIDs, (courseID, eachCallback) => {
+
+
+module.exports = (quizSearch) => {
+    asyncLib.each(quizSearch.courseIDs, (courseID, eachCallback) => {
         const logger = new Logger();
 
         // Get all of the quizzes
@@ -109,4 +84,4 @@ promptUser().then(async courseIDs => {
         }
         console.log('Finished');
     });
-});
+};

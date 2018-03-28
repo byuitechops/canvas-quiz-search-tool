@@ -3,7 +3,7 @@ const QuizSearch = require('./quizSearch.js');
 const asyncLib = require('async');
 const d3 = require('d3-dsv');
 const fs = require('fs');
-const getComments = require('./filters/comments.js');
+const getComments = require('./filters/questionComments.js');
 
 var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
@@ -29,7 +29,11 @@ var targets = [{
     conditions: [conditions.contains, conditions.equal_to, conditions.length],
     input_Required: true
 }, {
-    target: 'Comments',
+    target: 'Answer Comments',
+    conditions: [conditions.contains, conditions.equal_to, conditions.length],
+    input_Required: true
+}, {
+    target: 'Question Comments',
     conditions: [conditions.contains, conditions.equal_to, conditions.length],
     input_Required: true
 }, {
@@ -60,7 +64,7 @@ var menuQuestions = [
         name: 'menuChoice',
         message: 'Select a Target below using the spacebar:',
         type: 'radio',
-        choices: ['Answers', 'Comments', 'Point Value', 'Question Text', 'Title', 'Type', 'Get All Questions']
+        choices: ['Answers', 'Answer Comments', 'Question Comments', 'Point Value', 'Question Text', 'Title', 'Type', 'Get All Questions']
     }
 ];
 
@@ -234,7 +238,7 @@ askQuestionOne()
     .then(askQuestionThree)
     .then(readFile)
     .then((quizSearch) => {
-        if (quizSearch.target == 'Comments') {
+        if (quizSearch.target == 'Question Comments') {
             getComments(quizSearch);
         } else {
             console.log('This function is still in development.');

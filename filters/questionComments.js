@@ -69,9 +69,8 @@ module.exports = (quizSearch) => {
                     if (courseErr) {
                         eachCallback(null);
                     } else {
-                        console.log(`${courses[0].course_code} Quiz Question Feedback`);
-                        logger.reportTitle = `${courses[0].course_code} Quiz Question Feedback`;
-                        logger.htmlReport('./reports', '');
+                        logger.reportTitle = `${courses[0].course_code}`;
+                        logger.htmlReport('./reports/Comments');
                         eachCallback(null);
                     }
                 });

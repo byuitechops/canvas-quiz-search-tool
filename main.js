@@ -3,6 +3,7 @@ const QuizSearch = require('./quizSearch.js');
 const asyncLib = require('async');
 const d3 = require('d3-dsv');
 const fs = require('fs');
+const getComments = require('./filters/comments.js');
 
 var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
@@ -232,4 +233,10 @@ askQuestionOne()
     .then(askQuestionTwo)
     .then(askQuestionThree)
     .then(readFile)
-    .then(console.log);
+    .then((quizSearch) => {
+        if (quizSearch.target == 'Comments') {
+            getComments(quizSearch);
+        } else {
+            console.log('This function is still in development.');
+        }
+    });

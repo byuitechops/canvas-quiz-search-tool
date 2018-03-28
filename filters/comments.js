@@ -1,13 +1,11 @@
 const canvas = require('canvas-wrapper');
 const asyncLib = require('async');
 const Logger = require('logger');
-
-
+const subFilters = require('./subFilters.js');
 
 module.exports = (quizSearch) => {
     asyncLib.each(quizSearch.courseIDs, (courseID, eachCallback) => {
         const logger = new Logger();
-
         // Get all of the quizzes
         canvas.getQuizzes(courseID, (quizzesErr, quizzes) => {
             if (quizzesErr) {
@@ -66,12 +64,14 @@ module.exports = (quizSearch) => {
                     logger.error(eachErr);
                     return;
                 }
-                logger.setHeader('<h2>Quiz Questions with Feedback</h2><p>Each section below contains all of the questions for each quiz that contain question feedback for correct and incorrect answers, as well as feedback that shows regardless.');
+                logger.setHtmlHeader('<h2>Quiz Questions with Feedback</h2><p>Each section below contains all of the questions for each quiz that contain question feedback for correct and incorrect answers, as well as feedback that shows regardless.');
                 canvas.get(`/api/v1/courses/${courseID}`, (courseErr, courses) => {
                     if (courseErr) {
                         eachCallback(null);
                     } else {
-                        logger.htmlReport('.', `${courses[0].course_code} Quiz Question Feedback`);
+                        console.log(`${courses[0].course_code} Quiz Question Feedback`);
+                        logger.reportTitle = `${courses[0].course_code} Quiz Question Feedback`;
+                        logger.htmlReport('./reports', '');
                         eachCallback(null);
                     }
                 });

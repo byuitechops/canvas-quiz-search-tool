@@ -1,36 +1,44 @@
 const conditions = require('./conditions.js');
 
 module.exports = {
-    'Question Answers': {
+    'Answers': {
         conditions: {
-            'Equal To': conditions.equalTo,
-            'Not Equal To': conditions.notEqualTo,
-            'Contains': conditions.contains,
-            'Does Not Contain': conditions.doesNotContain,
+            'Has Answers': conditions.answersTruthy,
+            'Does Not Have Answers': conditions.answersFalsey,
+            'Equal To': conditions.answersEqualTo,
+            'Not Equal To': conditions.answersNotEqualTo,
+            'Contains': conditions.answersContains,
+            'Does Not Contain': conditions.answersDoesNotContain,
         },
         property: 'answers' //An Array of answers.
     },
     'Answer Comments': {
         conditions: {
-            'Equal To': conditions.equalTo,
-            'Not Equal To': conditions.notEqualTo,
-            'Contains': conditions.contains,
-            'Does Not Contain': conditions.doesNotContain,
+            'Has Comments': conditions.answerCommentsTruthy,
+            'Does Not Have Comments': conditions.answerCommentsFalsey,
+            'Equal To': conditions.answerCommentsEqualTo,
+            'Not Equal To': conditions.answerCommentsNotEqualTo,
+            'Contains': conditions.answerCommentsContains,
+            'Does Not Contain': conditions.answerCommentsDoesNotContain,
         },
-        property: 'answers' //I need to go one layer deaper. answer[i].answer_comments
+        property: 'answers' //I need to go one layer deaper. answer[i].comments, answer[i].comments_html
     },
     'Question Comments': {
         conditions: {
+            'Has Comments': conditions.truthy,
+            'Does Not have Comments': conditions.falsey,
             'Equal To': conditions.equalTo,
             'Not Equal To': conditions.notEqualTo,
             'Contains': conditions.contains,
             'Does Not Contain': conditions.doesNotContain,
         },
         property: ['correct_comments', 'incorrect_comments', 'neutral_comments',
-            'question.correct_comments_html', 'question.neutral_comments_html', 'question.incorrect_comments_html']
+            'correct_comments_html', 'neutral_comments_html', 'incorrect_comments_html']
     },
     'Point Value': {
         conditions: {
+            'Has Point Values': conditions.truthy,
+            'Does Not Have Point Values': conditions.falsey,
             'Less Than': conditions.lessThan,
             'Greater Than': conditions.greaterThan,
             'Equal To': conditions.equalTo
@@ -39,6 +47,8 @@ module.exports = {
     },
     'Question Text': {
         conditions: {
+            'Has Question Text': conditions.truthy,
+            'Does Not Have Question Text': conditions.falsey,
             'Equal To': conditions.equalTo,
             'Not Equal To': conditions.notEqualTo,
             'Contains': conditions.contains,
@@ -48,6 +58,8 @@ module.exports = {
     },
     'Question Title': {
         conditions: {
+            'Has Question Title': conditions.truthy,
+            'Does Not Have Question Title': conditions.falsey,
             'Equal To': conditions.equalTo,
             'Not Equal To': conditions.notEqualTo,
             'Contains': conditions.contains,
@@ -57,7 +69,18 @@ module.exports = {
     },
     'Question Type': {
         conditions: {
-            'Question Type': conditions.questionType
+            'Calculated': conditions.questionType,
+            'Essay': conditions.questionType,
+            'File Upload': conditions.questionType,
+            'Fill In Multiple Blanks': conditions.questionType,
+            'Matching': conditions.questionType,
+            'Multiple Answers': conditions.questionType,
+            'Multiple Choice': conditions.questionTypem,
+            'Multiple Drowndowns': conditions.questionType,
+            'Numerical': conditions.questionType,
+            'Short Answer': conditions.questionType,
+            'Text Only': conditions.questionType,
+            'True/False': conditions.questionType
         },
         property: 'question_type'
     }

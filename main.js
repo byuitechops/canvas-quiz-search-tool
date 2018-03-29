@@ -1,8 +1,9 @@
+const canvas = require('canvas-wrapper');
 const Enquirer = require('enquirer');
-const QuizSearch = require('./filterObject.js');
 const asyncLib = require('async');
 const d3 = require('d3-dsv');
 const fs = require('fs');
+const FilterObject = require('./filterObject.js');
 const quizTargets = require('./quizQuestionTargets.js');
 
 var enquirer = new Enquirer();
@@ -14,73 +15,33 @@ const questionsTypes = ['Multiple Choice', 'True/False', 'Fill in the Blank', 'F
     'Multiple Answers', 'Multiple Dropdowns', 'Matching', 'Numerical Answer', 'Formula Question',
     'Essay Question', 'File Upload Question', 'Text (no question)'];
 
-//Conditions for selection
-const conditions = {
-    contains: 'Contains',
-    equal_to: 'Equal to',
-    greater_than: 'Greater than',
-    less_than: 'Less than',
-    length: 'Length'
-};
-
-//Target objects for selection.
-var targets = [{
-    target: 'Answers',
-    conditions: [conditions.contains, conditions.equal_to, conditions.length],
-    input_Required: true
-}, {
-    target: 'Answer Comments',
-    conditions: [conditions.contains, conditions.equal_to, conditions.length],
-    input_Required: true
-}, {
-    target: 'Question Comments',
-    functionCall: getQuestionComments,
-    conditions: [conditions.contains, conditions.equal_to, conditions.length],
-    input_Required: true
-}, {
-    target: 'Point Value',
-    conditions: [conditions.equal_to, conditions.greater_than, conditions.less_than],
-    input_Required: true
-}, {
-    target: 'Question Text',
-    conditions: [conditions.contains, conditions.equal_to, conditions.length],
-    input_Required: true
-}, {
-    target: 'Title',
-    conditions: [conditions.contains, conditions.equal_to, conditions.length],
-    input_Required: true
-}, {
-    target: 'Type',
-    conditions: questionsTypes,
-    input_Required: false
-}, {
-    target: 'Get All Questions',
-    conditions: false,
-    input_Required: false
-}];
-
 //Question 1 - Targets
 var menuQuestions = [
     {
         name: 'menuChoice',
         message: 'Select a Target below using the spacebar:',
         type: 'radio',
-        choices: ['Answers', 'Answer Comments', 'Question Comments', 'Point Value', 'Question Text', 'Title', 'Type', 'Get All Questions']
+        choices: Object.keys(quizTargets)
     }
 ];
 
-//Question 2 - Conditions
-var conditionQuestions = [
-    {
-        name: 'conditionChoices',
-        message: 'Select Conditions below using the spacebar: \n(To select none, press enter)',
-        type: 'checkbox',
-        choices: []
-    }
-];
-
-//Question 3 - User Input
-//For the moment this is found in the askQuestionThree function.
+var filterStuff = (items, filterObject) => {
+    return items.filter(item => {
+        return filterObject.conditions.every(condition => {
+            var property = filterObject.target.property;
+            var itemValue;
+            if (Array.isArray(property)) {
+                itemValue = property.map(val => item[val]);
+            } else {
+                itemValue = item[property];
+            }
+            if (!Array.isArray(itemValue)) {
+                itemValue = [itemValue];
+            }
+            return condition.condition(itemValue, condition.value);
+        });
+    });
+};
 
 /*************************************************
  *           askQuestionOne() - Target
@@ -97,17 +58,9 @@ var conditionQuestions = [
  *************************************************/
 function askQuestionOne() {
     return enquirer.prompt(menuQuestions)
-        .then(answers => {
-            var target = answers.menuChoice;
-            conditionQuestions[0].choices = targets.find(currentTarget => {
-                return currentTarget.target == target;
-            }).conditions;
-            target = targets.find(currentTarget => {
-                return currentTarget.target == target;
-            });
-            return target;
+        .then(answer => {
+            return quizTargets[answer.menuChoice];
         }).catch(() => {
-            console.clear();
             return askQuestionOne();
         });
 }
@@ -132,23 +85,26 @@ function askQuestionTwo(target) {
     if (!target.conditions) {
         return target;
     }
+    //Question 2 - Conditions
+    var conditionQuestions = [
+        {
+            name: 'conditionChoices',
+            message: 'Select Conditions below using the spacebar: \n(To select none, press enter)',
+            type: 'checkbox',
+            choices: Object.keys(target.conditions)
+        }
+    ];
     return enquirer.prompt(conditionQuestions)
         .then(answers => {
-            var conditions = [];
-            if (!target.input_Required) {
-                conditions = answers.conditionChoices;
-                var quizSearch = new QuizSearch(target.target, conditions, [], target.functionCall);
-                return quizSearch;
-            } else {
-                conditions = answers.conditionChoices.map(answer => {
-                    return {
-                        condition: answer,
-                        user_input: ''
-                    };
+            var conditionsArray = [];
+            answers.conditionChoices.forEach(condition => {
+                conditionsArray.push({
+                    condition: quizTargets[answers.menuChoice].conditions[condition],
+                    conditionName: condition,
+                    value: ''
                 });
-                target.conditions = conditions;
-                return target;
-            }
+            });
+            return new FilterObject(quizTargets[answers.menuChoice], conditionsArray);
         });
 }
 
@@ -163,27 +119,27 @@ function askQuestionTwo(target) {
  * 
  * Return Type: Object
  *************************************************/
-function askQuestionThree(target) {
-    if (!target.input_Required) {
-        return target;
-    } else {
-        return new Promise((resolve) => {
-            asyncLib.eachSeries(target.conditions, (condition, callback) => {
-                //Ask Question 3 - User Input
+function askQuestionThree(filterObject) {
+    return new Promise((resolve) => {
+        asyncLib.eachSeries(filterObject.conditions, (condition, callback) => {
+            //Ask Question 3 - User Input
+            if (condition.conditionName === 'Has Answers') {
+                callback();
+            } else {
                 var userInput = enquirer.question({
                     name: 'userInput',
-                    message: condition.condition + ':',
+                    message: condition.conditionName + ':',
                 });
                 enquirer.prompt(userInput).then(answer => {
-                    condition.user_input = answer.userInput;
+                    condition.value = answer.userInput;
                     callback();
                 });
-            }, () => {
-                var quizSearch = new QuizSearch(target.target, target.conditions, [], target.functionCall);
-                resolve(quizSearch);
-            });
+            }
+        }, () => {
+            resolve(filterObject);
         });
-    }
+
+    });
 }
 
 /*************************************************
@@ -237,9 +193,18 @@ function readFile(quizSearch) {
 askQuestionOne()
     .then(askQuestionTwo)
     .then(askQuestionThree)
-    .then(readFile)
-    .then((quizSearch) => {
-        console.clear();
-        console.log('Starting');
-        quizSearch.functionCall(quizSearch);
+    .then(filterObject => {
+        canvas.get('/api/v1/courses/10463/quizzes/92999/questions', (err, questions) => {
+            if (err) console.log(err);
+            else {
+                console.log(filterStuff(questions, filterObject));
+                //filterStuff(questions, filterObject);
+            }
+        });
     });
+// .then(readFile)
+// .then((quizSearch) => {
+//     console.clear();
+//     console.log('Starting');
+//     quizSearch.functionCall(quizSearch);
+// });

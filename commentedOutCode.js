@@ -81,7 +81,6 @@
 //     return courseIDs;
 // };
 
-
 // class QuizSearch {
 //     constructor(target = [], conditions = [], courseIDs = [], functionCall) {
 //         this.target = target;
@@ -90,3 +89,131 @@
 //         this.functionCall = functionCall;
 //     }
 // }
+
+//Target objects for selection.
+// var targets = [{
+//     target: 'Answers',
+//     conditions: [conditions.contains, conditions.equal_to, conditions.length],
+//     input_Required: true
+// }, {
+//     target: 'Answer Comments',
+//     conditions: [conditions.contains, conditions.equal_to, conditions.length],
+//     input_Required: true
+// }, {
+//     target: 'Question Comments',
+//     functionCall: getQuestionComments,
+//     conditions: [conditions.contains, conditions.equal_to, conditions.length],
+//     input_Required: true
+// }, {
+//     target: 'Point Value',
+//     conditions: [conditions.equal_to, conditions.greater_than, conditions.less_than],
+//     input_Required: true
+// }, {
+//     target: 'Question Text',
+//     conditions: [conditions.contains, conditions.equal_to, conditions.length],
+//     input_Required: true
+// }, {
+//     target: 'Title',
+//     conditions: [conditions.contains, conditions.equal_to, conditions.length],
+//     input_Required: true
+// }, {
+//     target: 'Type',
+//     conditions: questionsTypes,
+//     input_Required: false
+// }, {
+//     target: 'Get All Questions',
+//     conditions: false,
+//     input_Required: false
+// }];
+
+//Part of askQuestionTwo
+// var conditions = [];
+// if (!target.input_Required) {
+//     conditions = answers.conditionChoices;
+//     var quizSearch = new QuizSearch(target.target, conditions, [], target.functionCall);
+//     return quizSearch;
+// } else {
+//     conditions = answers.conditionChoices.map(answer => {
+//         return {
+//             condition: answer,
+//             user_input: ''
+//         };
+//     });
+//     target.conditions = conditions;
+//     return target;
+// }
+//});
+
+// const truthy = function (itemValue) {
+//     if (itemValue) {
+//         return true;
+//     } else {
+//         return false;
+//     }
+// };
+// const falsey = function (itemValue) {
+//     if (!itemValue) {
+//         return true;
+//     } else {
+//         return false;
+//     }
+// };
+// const lessThan = function (itemValue, value) {
+//     return itemValue < value;
+// };
+// const greaterThan = function (itemValue, value) {
+//     return itemValue > value;
+// };
+// const lessThanOrEqualTo = function (itemValue, value) {
+//     return itemValue <= value;
+// };
+// const greaterThanOrEqualTo = function (itemValue, value) {
+//     return itemValue >= value;
+// };
+// const equalTo = function (itemValue, value) {
+//     return itemValue === value;
+// };
+// const notEqualTo = function (itemValue, value) {
+//     return itemValue !== value;
+// };
+// const contains = function (itemValue, value) {
+//     return itemValue.includes(value);
+// };
+// const doesNotContain = function (itemValue, value) {
+//     return !itemValue.includes(value);
+// };
+
+// var checkMark = '<p style="text-align:center">&#x2714;</p>';
+// const contains = function (userInput, target, object) {
+//     return object[target].includes(userInput);
+// };
+
+// const equalTo = function (userInput, question) {
+//     console.log('Equal to!');
+// };
+
+// const greaterThan = function (userInput, question) {
+//     console.log('Greater than!');
+// };
+
+// const lessThan = function (userInput, question) {
+//     console.log('Less than!');
+// };
+
+// const length = function (userInput, question) {
+//     console.log('Length!');
+// };
+
+// const questionTypes = function (userInput, question) {
+//     console.log('Question Types!');
+// };
+
+// module.exports = {
+//     contains,
+//     equal_to: equalTo,
+//     greater_than: greaterThan,
+//     less_than: lessThan,
+//     length,
+//     questionTypes
+
+// };

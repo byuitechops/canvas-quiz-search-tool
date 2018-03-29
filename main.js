@@ -1,9 +1,9 @@
 const Enquirer = require('enquirer');
-const QuizSearch = require('./quizSearch.js');
+const QuizSearch = require('./filterObject.js');
 const asyncLib = require('async');
 const d3 = require('d3-dsv');
 const fs = require('fs');
-const getComments = require('./filters/questionComments.js');
+const quizTargets = require('./quizQuestionTargets.js');
 
 var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
@@ -34,6 +34,7 @@ var targets = [{
     input_Required: true
 }, {
     target: 'Question Comments',
+    functionCall: getQuestionComments,
     conditions: [conditions.contains, conditions.equal_to, conditions.length],
     input_Required: true
 }, {
@@ -136,7 +137,7 @@ function askQuestionTwo(target) {
             var conditions = [];
             if (!target.input_Required) {
                 conditions = answers.conditionChoices;
-                var quizSearch = new QuizSearch(target.target, conditions);
+                var quizSearch = new QuizSearch(target.target, conditions, [], target.functionCall);
                 return quizSearch;
             } else {
                 conditions = answers.conditionChoices.map(answer => {
@@ -178,7 +179,7 @@ function askQuestionThree(target) {
                     callback();
                 });
             }, () => {
-                var quizSearch = new QuizSearch(target.target, target.conditions);
+                var quizSearch = new QuizSearch(target.target, target.conditions, [], target.functionCall);
                 resolve(quizSearch);
             });
         });
@@ -238,9 +239,7 @@ askQuestionOne()
     .then(askQuestionThree)
     .then(readFile)
     .then((quizSearch) => {
-        if (quizSearch.target == 'Question Comments') {
-            getComments(quizSearch);
-        } else {
-            console.log('This function is still in development.');
-        }
+        console.clear();
+        console.log('Starting');
+        quizSearch.functionCall(quizSearch);
     });

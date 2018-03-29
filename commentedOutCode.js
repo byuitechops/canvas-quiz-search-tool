@@ -80,3 +80,13 @@
 //     });
 //     return courseIDs;
 // };
+
+
+// class QuizSearch {
+//     constructor(target = [], conditions = [], courseIDs = [], functionCall) {
+//         this.target = target;
+//         this.conditions = conditions;
+//         this.courseIDs = courseIDs;
+//         this.functionCall = functionCall;
+//     }
+// }

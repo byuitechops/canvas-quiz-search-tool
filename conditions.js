@@ -1,4 +1,7 @@
 const truthy = function (items) {
+    if (items.length == 0) {
+        return false;
+    }
     return items.some(item => {
         if (item) {
             return true;
@@ -9,6 +12,9 @@ const truthy = function (items) {
 };
 
 const falsey = function (items) {
+    if (items.length > 0) {
+        return false;
+    }
     return items.some(item => {
         if (!item) {
             return true;

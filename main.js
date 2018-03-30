@@ -176,14 +176,14 @@ function convertCSV(csvString) {
  * 
  * Return Type: Object
  *************************************************/
-function readFile(quizSearch) {
+function readFile(filterObject) {
     return new Promise((resolve, reject) => {
         fs.readFile('courseIDs.csv', 'utf8', (err, data) => {
             if (err) {
                 reject(err);
             } else {
-                quizSearch.courseIDs = convertCSV(data);
-                resolve(quizSearch);
+                filterObject.courseIDs = convertCSV(data);
+                resolve(filterObject);
             }
         });
     });
@@ -198,18 +198,34 @@ function readFile(quizSearch) {
 askQuestionOne()
     .then(askQuestionTwo)
     .then(askQuestionThree)
+    .then(readFile)
     .then(filterObject => {
-        canvas.get('/api/v1/courses/10473/quizzes/93262/questions', (err, questions) => {
-            if (err) console.log(err);
-            else {
-                console.log(filterStuff(questions, filterObject));
-                //filterStuff(questions, filterObject);
+        asyncLib.each(filterObject.courseIDs, (courseID, eachCallBack) => {
+            canvas.getQuizzes(courseID, (err, quizzes) => {
+                function getQuestions(quiz, callback) {
+                    canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
+                        if (err) {
+                            console.log(err);
+                            callback(null);
+                            return;
+                        }
+                        console.log(filterStuff(questions, filterObject));
+                        callback(null);
+                    });
+
+                }
+                asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    eachCallBack(null);
+                });
+
+            });
+        }, err => {
+            if (err) {
+                console.log(err);
             }
+            console.log('Finished');
         });
     });
-// .then(readFile)
-// .then((quizSearch) => {
-//     console.clear();
-//     console.log('Starting');
-//     quizSearch.functionCall(quizSearch);
-// });

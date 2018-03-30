@@ -225,3 +225,10 @@
 //         break;
 //     }
 // }
+
+// .then(readFile)
+// .then((quizSearch) => {
+//     console.clear();
+//     console.log('Starting');
+//     quizSearch.functionCall(quizSearch);
+// });

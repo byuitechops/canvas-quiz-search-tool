@@ -215,5 +215,13 @@
 //     less_than: lessThan,
 //     length,
 //     questionTypes
-
 // };
+
+// for (var i = 0; i < questionTypes.length; i++) {
+//     console.log(condition.conditionName, questionTypes[i]);
+//     condition.value = questionTypes[i].match(new RegExp(condition.conditionName + '+', 'i'));
+//     if (condition.value != null) {
+//         condition.value = condition.value.input;
+//         break;
+//     }
+// }

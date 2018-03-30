@@ -11,9 +11,9 @@ enquirer.register('checkbox', require('prompt-checkbox'));
 enquirer.register('radio', require('prompt-radio'));
 
 //Types of questions available from Canvas
-const questionsTypes = ['Multiple Choice', 'True/False', 'Fill in the Blank', 'Fill in Multiple Blanks',
-    'Multiple Answers', 'Multiple Dropdowns', 'Matching', 'Numerical Answer', 'Formula Question',
-    'Essay Question', 'File Upload Question', 'Text (no question)'];
+
+
+const noInputConditions = [/Has+/g, /Does Not+/g];
 
 //Question 1 - Targets
 var menuQuestions = [
@@ -123,7 +123,12 @@ function askQuestionThree(filterObject) {
     return new Promise((resolve) => {
         asyncLib.eachSeries(filterObject.conditions, (condition, callback) => {
             //Ask Question 3 - User Input
-            if (condition.conditionName === 'Has Answers') {
+            if (noInputConditions.some(regEx => {
+                return regEx.test(condition.conditionName);
+            }) || filterObject.target.property === 'question_type') {
+                if (filterObject.target.property === 'question_type') {
+                    condition.value = filterObject.target.questionTypes[condition.conditionName];
+                }
                 callback();
             } else {
                 var userInput = enquirer.question({
@@ -194,7 +199,7 @@ askQuestionOne()
     .then(askQuestionTwo)
     .then(askQuestionThree)
     .then(filterObject => {
-        canvas.get('/api/v1/courses/10463/quizzes/92999/questions', (err, questions) => {
+        canvas.get('/api/v1/courses/10473/quizzes/93262/questions', (err, questions) => {
             if (err) console.log(err);
             else {
                 console.log(filterStuff(questions, filterObject));

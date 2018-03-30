@@ -75,12 +75,26 @@ module.exports = {
             'Fill In Multiple Blanks': conditions.questionType,
             'Matching': conditions.questionType,
             'Multiple Answers': conditions.questionType,
-            'Multiple Choice': conditions.questionTypem,
+            'Multiple Choice': conditions.questionType,
             'Multiple Drowndowns': conditions.questionType,
             'Numerical': conditions.questionType,
             'Short Answer': conditions.questionType,
             'Text Only': conditions.questionType,
             'True/False': conditions.questionType
+        },
+        questionTypes: {
+            'Calculated': 'calculated_question',
+            'Essay': 'essay_question',
+            'File Upload': 'file_upload_question',
+            'Fill In Multiple Blanks': 'fill_in_multiple_blanks_question',
+            'Matching': 'matching_question',
+            'Multiple Answers': 'multiple_answers_question',
+            'Multiple Choice': 'multiple_choice_question',
+            'Multiple Drowndowns': 'multiple_dropdowns_question',
+            'Numerical': 'numerical_question',
+            'Short Answer': 'short_answer_question',
+            'Text Only': 'text_only_question',
+            'True/False': 'true_false_question'
         },
         property: 'question_type'
     }

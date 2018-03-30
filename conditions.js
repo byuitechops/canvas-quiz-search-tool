@@ -1,5 +1,4 @@
 const truthy = function (items) {
-    console.log(items);
     return items.some(item => {
         if (item) {
             return true;
@@ -57,11 +56,10 @@ const greaterThanOrEqualTo = function (items, value) {
 
 const equalTo = function (items, value) {
     return items.some(item => {
-        console.log(item);
         if (item === null) {
             return false;
         }
-        return item === value;
+        return item == value;
     });
 };
 
@@ -71,7 +69,6 @@ const notEqualTo = function (items, value) {
 
 const contains = function (items, value) {
     return items.some(item => {
-        //console.log(item);
         if (item === null) {
             return false;
         }
@@ -82,9 +79,13 @@ const contains = function (items, value) {
 const doesNotContain = function (items, value) {
     return !contains(items, value);
 };
-const questionType = function (itemValue, value) {
-    console.log(itemValue);
-    //return itemValue === value;
+
+//Question Type Function
+const questionType = function (items, value) {
+    return items.some(item => {
+        return item === value;
+    });
+
 };
 
 //Question Answer Specific Functions 
@@ -116,7 +117,6 @@ const answersNotEqualTo = function (items, value) {
 };
 const answersContains = function (items, value) {
     return items.some(item => {
-        console.log(item.text);
         if (!item.text) {
             return false;
         } else {

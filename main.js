@@ -210,6 +210,7 @@ askQuestionOne()
                             return;
                         }
                         console.log(filterStuff(questions, filterObject));
+
                         callback(null);
                     });
 

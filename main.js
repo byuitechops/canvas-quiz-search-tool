@@ -1,10 +1,13 @@
 const canvas = require('canvas-wrapper');
+//const Logger = require('logger');
 const Enquirer = require('enquirer');
 const asyncLib = require('async');
 const d3 = require('d3-dsv');
 const fs = require('fs');
 const FilterObject = require('./filterObject.js');
 const quizTargets = require('./quizQuestionTargets.js');
+
+//var logger = new Logger('Quizzes Hurray');
 
 var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
@@ -50,11 +53,10 @@ var filterStuff = (items, filterObject) => {
  * 
  * Description: Prompts the user to select a 
  * target. The target is the part of the quiz 
- * Questions to focus on. The user may only 
- * choose one. This function returns the selected 
- * target as a JavaScript object.
+ * Questions to focus on. This function returns 
+ * the selected target as a JavaScript object.
  * 
- * Return Type: Object
+ * Return Type: Promise
  *************************************************/
 function askQuestionOne() {
     return enquirer.prompt(menuQuestions)
@@ -140,7 +142,7 @@ function askQuestionTwo(target) {
  * target's conditions require input from the 
  * user. Returns a QuizSearch object.
  * 
- * Return Type: Object
+ * Return Type: Promise
  *************************************************/
 function askQuestionThree(filterObject) {
     return new Promise((resolve) => {
@@ -285,6 +287,7 @@ function applyFilters(filterData) {
 
 function createReport(filteredQuestions) {
     asyncLib.each(filteredQuestions, (question, callback) => {
+        //Create the Logger report here
         console.log(question);
         callback(null);
     }, err => {

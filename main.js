@@ -85,27 +85,50 @@ function askQuestionTwo(target) {
     if (!target.conditions) {
         return target;
     }
-    //Question 2 - Conditions
-    var conditionQuestions = [
-        {
-            name: 'conditionChoices',
-            message: 'Select Conditions below using the spacebar: \n(To select none, press enter)',
-            type: 'checkbox',
-            choices: Object.keys(target.conditions)
-        }
-    ];
-    return enquirer.prompt(conditionQuestions)
-        .then(answers => {
-            var conditionsArray = [];
-            answers.conditionChoices.forEach(condition => {
+    //If the target is Question Type, we need the question to be a radio, otherwise it's a checkbox
+    if (target.property === 'question_type') {
+        //Question 2 - Question Type
+        var typeQuestions = [
+            {
+                name: 'typeChoices',
+                message: 'Select a question type below using the spacebar: \n(To select none, press enter)',
+                type: 'radio',
+                choices: Object.keys(target.conditions)
+            }
+        ];
+        return enquirer.prompt(typeQuestions)
+            .then(answers => {
+                var conditionsArray = [];
                 conditionsArray.push({
-                    condition: quizTargets[answers.menuChoice].conditions[condition],
-                    conditionName: condition,
+                    condition: quizTargets[answers.menuChoice].conditions[answers.typeChoices],
+                    conditionName: answers.typeChoices,
                     value: ''
                 });
+                return new FilterObject(quizTargets[answers.menuChoice], conditionsArray);
             });
-            return new FilterObject(quizTargets[answers.menuChoice], conditionsArray);
-        });
+    } else {
+        //Question 2 - Conditions
+        var conditionQuestions = [
+            {
+                name: 'conditionChoices',
+                message: 'Select Conditions below using the spacebar: \n(To select none, press enter)',
+                type: 'checkbox',
+                choices: Object.keys(target.conditions)
+            }
+        ];
+        return enquirer.prompt(conditionQuestions)
+            .then(answers => {
+                var conditionsArray = [];
+                answers.conditionChoices.forEach(condition => {
+                    conditionsArray.push({
+                        condition: quizTargets[answers.menuChoice].conditions[condition],
+                        conditionName: condition,
+                        value: ''
+                    });
+                });
+                return new FilterObject(quizTargets[answers.menuChoice], conditionsArray);
+            });
+    }
 }
 
 /*************************************************
@@ -147,6 +170,23 @@ function askQuestionThree(filterObject) {
     });
 }
 
+function moreFilters(filterObject) {
+    return new Promise((resolve) => {
+        var moreFilters = [
+            {
+                name: 'moreFilters',
+                message: 'Would you like to add another filter?',
+                type: 'radio',
+                choices: ['Yes', 'No']
+            }
+        ];
+        enquirer.prompt(moreFilters).then(answer => {
+            resolve([filterObject, answer.moreFilters]);
+        });
+    });
+}
+
+
 /*************************************************
  *                convertCSV()
  * 
@@ -182,10 +222,76 @@ function readFile(filterObject) {
             if (err) {
                 reject(err);
             } else {
-                filterObject.courseIDs = convertCSV(data);
-                resolve(filterObject);
+                resolve([filterObject, convertCSV(data)]);
             }
         });
+    });
+}
+
+
+function getQuizQuestions(filterData) {
+    return new Promise((resolve) => {
+        var questionData = [];
+        asyncLib.each(filterData[1], (courseID, eachCallBack) => {
+            canvas.getQuizzes(courseID, (err, quizzes) => {
+                function getQuestions(quiz, callback) {
+                    canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
+                        if (err) {
+                            console.log(err);
+                            callback(null);
+                            return;
+                        }
+                        questionData.push(questions);
+                        callback(null);
+                    });
+                }
+                asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
+                    if (err) {
+                        console.log(err);
+                    }
+                    eachCallBack(null);
+                });
+            });
+        }, err => {
+            if (err) {
+                console.log(err);
+            }
+            var newArray = [];
+            questionData.forEach(questionArray => {
+                if (questionArray.length != 0) {
+                    newArray = newArray.concat(questionArray);
+                }
+            });
+            resolve([filterData[0], newArray]);
+        });
+    });
+}
+
+function applyFilters(filterData) {
+    return new Promise((resolve) => {
+        var filterObjects = filterData[0];
+        var questions = filterData[1];
+        asyncLib.each(filterObjects, (filterObject, callback) => {
+            questions = filterStuff(questions, filterObject);
+            callback(null);
+        }, err => {
+            if (err) {
+                console.error(err);
+            }
+            resolve(questions);
+        });
+    });
+}
+
+function createReport(filteredQuestions) {
+    asyncLib.each(filteredQuestions, (question, callback) => {
+        console.log(question);
+        callback(null);
+    }, err => {
+        if (err) {
+            console.error(err);
+        }
+        console.log('\nFinished');
     });
 }
 
@@ -195,38 +301,62 @@ function readFile(filterObject) {
  * Calls all the necessary functions to run the
  * program. Waterfall style.
  *************************************************/
-askQuestionOne()
-    .then(askQuestionTwo)
-    .then(askQuestionThree)
-    .then(readFile)
-    .then(filterObject => {
-        asyncLib.each(filterObject.courseIDs, (courseID, eachCallBack) => {
-            canvas.getQuizzes(courseID, (err, quizzes) => {
-                function getQuestions(quiz, callback) {
-                    canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
-                        if (err) {
-                            console.log(err);
-                            callback(null);
-                            return;
-                        }
-                        console.log(filterStuff(questions, filterObject));
-
-                        callback(null);
-                    });
-
+function main(filters = []) {
+    askQuestionOne()
+        .then(askQuestionTwo)
+        .then(askQuestionThree)
+        .then(moreFilters)
+        .then(answer => {
+            return new Promise((resolve) => {
+                if (answer[1] === 'Yes') {
+                    filters.push(answer[0]);
+                    main(filters);
+                } else {
+                    filters.push(answer[0]);
+                    resolve(filters);
                 }
-                asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
-                    if (err) {
-                        console.log(err);
-                    }
-                    eachCallBack(null);
-                });
-
             });
-        }, err => {
-            if (err) {
-                console.log(err);
-            }
-            console.log('Finished');
-        });
-    });
+        })
+        .then(readFile)
+        .then(getQuizQuestions)
+        .then(applyFilters)
+        .then(createReport);
+}
+// .then(filterObject => {
+//     asyncLib.each(filterObject.courseIDs, (courseID, eachCallBack) => {
+//         canvas.getQuizzes(courseID, (err, quizzes) => {
+//             function getQuestions(quiz, callback) {
+//                 canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
+//                     if (err) {
+//                         console.log('Hello', err);
+//                         callback(null);
+//                         return;
+//                     }
+//                     var filteredData = filterStuff(questions, filterObject);
+//                     if (filteredData.length > 0) {
+//                         filteredData.forEach(data => {
+//                             console.log(data[filterObject.target.property]);
+//                         });
+//                     }
+
+//                     callback(null);
+//                 });
+
+//             }
+//             asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
+//                 if (err) {
+//                     console.log(err);
+//                 }
+//                 eachCallBack(null);
+//             });
+
+//         });
+//     }, err => {
+//         if (err) {
+//             console.log(err);
+//         }
+//         console.log('\nFinished');
+//     });
+// });
+
+main();

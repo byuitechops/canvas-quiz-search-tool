@@ -232,3 +232,40 @@
 //     console.log('Starting');
 //     quizSearch.functionCall(quizSearch);
 // });
+
+// .then(filterObject => {
+//     asyncLib.each(filterObject.courseIDs, (courseID, eachCallBack) => {
+//         canvas.getQuizzes(courseID, (err, quizzes) => {
+//             function getQuestions(quiz, callback) {
+//                 canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
+//                     if (err) {
+//                         console.log('Hello', err);
+//                         callback(null);
+//                         return;
+//                     }
+//                     var filteredData = filterStuff(questions, filterObject);
+//                     if (filteredData.length > 0) {
+//                         filteredData.forEach(data => {
+//                             console.log(data[filterObject.target.property]);
+//                         });
+//                     }
+
+//                     callback(null);
+//                 });
+
+//             }
+//             asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
+//                 if (err) {
+//                     console.log(err);
+//                 }
+//                 eachCallBack(null);
+//             });
+
+//         });
+//     }, err => {
+//         if (err) {
+//             console.log(err);
+//         }
+//         console.log('\nFinished');
+//     });
+// });

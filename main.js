@@ -24,6 +24,11 @@ var menuQuestions = [
         name: 'menuChoice',
         message: 'Select a Target below using the spacebar:',
         type: 'radio',
+        validate: input => {
+            //This uses a Not Not check to find out if the input is truthy or falsey. We want to see if input is true. 
+            //Doing 'return input' just returns a copy of input, however 'return !!input' will return a boolean true or false.
+            return !!input;
+        },
         choices: Object.keys(quizTargets)
     }
 ];
@@ -62,8 +67,6 @@ function askQuestionOne() {
     return enquirer.prompt(menuQuestions)
         .then(answer => {
             return quizTargets[answer.menuChoice];
-        }).catch(() => {
-            return askQuestionOne();
         });
 }
 
@@ -95,6 +98,11 @@ function askQuestionTwo(target) {
                 name: 'typeChoices',
                 message: 'Select a question type below using the spacebar: \n(To select none, press enter)',
                 type: 'radio',
+                validate: input => {
+                    //This uses a Not Not check to find out if the input is truthy or falsey. We want to see if input is true. 
+                    //Doing 'return input' just returns a copy of input, however 'return !!input' will return a boolean true or false.
+                    return !!input;
+                },
                 choices: Object.keys(target.conditions)
             }
         ];
@@ -156,10 +164,17 @@ function askQuestionThree(filterObject) {
                 }
                 callback();
             } else {
-                var userInput = enquirer.question({
-                    name: 'userInput',
-                    message: condition.conditionName + ':',
-                });
+                var userInput = [
+                    {
+                        name: 'userInput',
+                        message: condition.conditionName + ':',
+                        validate: input => {
+                            //This uses a Not Not check to find out if the input is truthy or falsey. We want to see if input is true. 
+                            //Doing 'return input' just returns a copy of input, however 'return !!input' will return a boolean true or false.
+                            return !!input;
+                        },
+                    }
+                ];
                 enquirer.prompt(userInput).then(answer => {
                     condition.value = answer.userInput;
                     callback();
@@ -178,6 +193,11 @@ function moreFilters(filterObject) {
             {
                 name: 'moreFilters',
                 message: 'Would you like to add another filter?',
+                validate: input => {
+                    //This uses a Not Not check to find out if the input is truthy or falsey. We want to see if input is true. 
+                    //Doing 'return input' just returns a copy of input, however 'return !!input' will return a boolean true or false.
+                    return !!input;
+                },
                 type: 'radio',
                 choices: ['Yes', 'No']
             }
@@ -325,41 +345,5 @@ function main(filters = []) {
         .then(applyFilters)
         .then(createReport);
 }
-// .then(filterObject => {
-//     asyncLib.each(filterObject.courseIDs, (courseID, eachCallBack) => {
-//         canvas.getQuizzes(courseID, (err, quizzes) => {
-//             function getQuestions(quiz, callback) {
-//                 canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
-//                     if (err) {
-//                         console.log('Hello', err);
-//                         callback(null);
-//                         return;
-//                     }
-//                     var filteredData = filterStuff(questions, filterObject);
-//                     if (filteredData.length > 0) {
-//                         filteredData.forEach(data => {
-//                             console.log(data[filterObject.target.property]);
-//                         });
-//                     }
-
-//                     callback(null);
-//                 });
-
-//             }
-//             asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
-//                 if (err) {
-//                     console.log(err);
-//                 }
-//                 eachCallBack(null);
-//             });
-
-//         });
-//     }, err => {
-//         if (err) {
-//             console.log(err);
-//         }
-//         console.log('\nFinished');
-//     });
-// });
 
 main();

@@ -1,5 +1,5 @@
 const canvas = require('canvas-wrapper');
-//const Logger = require('logger');
+const Logger = require('logger');
 const Enquirer = require('enquirer');
 const asyncLib = require('async');
 const d3 = require('d3-dsv');
@@ -7,16 +7,13 @@ const fs = require('fs');
 const FilterObject = require('./filterObject.js');
 const quizTargets = require('./quizQuestionTargets.js');
 
-//var logger = new Logger('Quizzes Hurray');
-
 var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
 enquirer.register('radio', require('prompt-radio'));
 
 //Types of questions available from Canvas
 
-
-const noInputConditions = [/Has+/g, /Does Not+/g];
+const noInputConditions = ['Has', 'Does Not'];
 
 //Question 1 - Targets
 var menuQuestions = [
@@ -156,8 +153,8 @@ function askQuestionThree(filterObject) {
     return new Promise((resolve) => {
         asyncLib.eachSeries(filterObject.conditions, (condition, callback) => {
             //Ask Question 3 - User Input
-            if (noInputConditions.some(regEx => {
-                return regEx.test(condition.conditionName);
+            if (noInputConditions.some(string => {
+                return condition.conditionName.includes(string);
             }) || filterObject.target.property === 'question_type') {
                 if (filterObject.target.property === 'question_type') {
                     condition.value = filterObject.target.questionTypes[condition.conditionName];
@@ -251,40 +248,36 @@ function readFile(filterObject) {
 }
 
 
-function getQuizQuestions(filterData) {
+function getQuizQuestions(filterObjects, courseID) {
     return new Promise((resolve) => {
         var questionData = [];
-        asyncLib.each(filterData[1], (courseID, eachCallBack) => {
-            canvas.getQuizzes(courseID, (err, quizzes) => {
-                function getQuestions(quiz, callback) {
-                    canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
-                        if (err) {
-                            console.log(err);
-                            callback(null);
-                            return;
-                        }
-                        questionData.push(questions);
-                        callback(null);
-                    });
-                }
-                asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
+        canvas.getQuizzes(courseID, (err, quizzes) => {
+            function getQuestions(quiz, callback) {
+                canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
                     if (err) {
                         console.log(err);
+                        callback(null);
+                        return;
                     }
-                    eachCallBack(null);
+                    if (questions.length != 0) {
+
+                        questionData.push(questions);
+                    }
+                    callback(null);
                 });
-            });
-        }, err => {
-            if (err) {
-                console.log(err);
             }
-            var newArray = [];
-            questionData.forEach(questionArray => {
-                if (questionArray.length != 0) {
-                    newArray = newArray.concat(questionArray);
+            asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
+                if (err) {
+                    console.log(err);
                 }
+                var newArray = [];
+                questionData.forEach(questionArray => {
+                    if (questionArray.length != 0) {
+                        newArray = newArray.concat(questionArray);
+                    }
+                });
+                resolve([filterObjects, newArray]);
             });
-            resolve([filterData[0], newArray]);
         });
     });
 }
@@ -305,16 +298,21 @@ function applyFilters(filterData) {
     });
 }
 
-function createReport(filteredQuestions) {
-    asyncLib.each(filteredQuestions, (question, callback) => {
-        //Create the Logger report here
-        console.log(question);
-        callback(null);
-    }, err => {
-        if (err) {
-            console.error(err);
-        }
-        console.log('\nFinished');
+function createReport(filteredQuestions, courseID) {
+    canvas.get(`/api/v1/courses/${courseID}`, (err, course) => {
+        console.log(course);
+        var courseCode = course[0].course_code;
+        asyncLib.each(filteredQuestions, (question, callback) => {
+            //Create the Logger report here
+            var logger = new Logger('');
+            console.log(question);
+            callback(null);
+        }, err => {
+            if (err) {
+                console.error(err);
+            }
+            console.log('\nReport Created for: ' + courseCode);
+        });
     });
 }
 
@@ -341,9 +339,16 @@ function main(filters = []) {
             });
         })
         .then(readFile)
-        .then(getQuizQuestions)
-        .then(applyFilters)
-        .then(createReport);
+        .then(filterData => {
+            asyncLib.each(filterData[1], (courseID, callback) => {
+                getQuizQuestions(filterData[0], courseID)
+                    .then(applyFilters)
+                    .then(questions => {
+                        createReport(questions, courseID);
+                    });
+                callback(null);
+            });
+        });
 }
 
 main();

@@ -269,3 +269,9 @@
 //         console.log('\nFinished');
 //     });
 // });
+
+//const noInputConditions = [/Has+/g, /Does Not+/g];
+
+// if (noInputConditions.some(regEx => {
+//     return regEx.test(condition.conditionName);
+// }) || filterObject.target.property === 'question_type') 

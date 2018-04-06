@@ -7,6 +7,8 @@ const fs = require('fs');
 const FilterObject = require('./filterObject.js');
 const quizTargets = require('./quizQuestionTargets.js');
 
+var logger = new Logger();
+
 var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
 enquirer.register('radio', require('prompt-radio'));
@@ -255,7 +257,7 @@ function getQuizQuestions(filterObjects, courseID) {
             function getQuestions(quiz, callback) {
                 canvas.getQuizQuestions(courseID, quiz.id, (err, questions) => {
                     if (err) {
-                        console.log(err);
+                        logger.error(err);
                         callback(null);
                         return;
                     }
@@ -268,7 +270,7 @@ function getQuizQuestions(filterObjects, courseID) {
             }
             asyncLib.eachLimit(quizzes, 10, getQuestions, err => {
                 if (err) {
-                    console.log(err);
+                    logger.log(err);
                 }
                 var newArray = [];
                 questionData.forEach(questionArray => {
@@ -276,7 +278,7 @@ function getQuizQuestions(filterObjects, courseID) {
                         newArray = newArray.concat(questionArray);
                     }
                 });
-                resolve([filterObjects, newArray]);
+                resolve([filterObjects, newArray, quizzes]);
             });
         });
     });
@@ -291,26 +293,39 @@ function applyFilters(filterData) {
             callback(null);
         }, err => {
             if (err) {
-                console.error(err);
+                logger.error(err);
             }
-            resolve(questions);
+            resolve([questions, filterData[2]]);
         });
     });
 }
 
-function createReport(filteredQuestions, courseID) {
+function createReport(filteredQuestions, courseID, quizzes, filterObjects) {
     canvas.get(`/api/v1/courses/${courseID}`, (err, course) => {
-        console.log(course);
         var courseCode = course[0].course_code;
+        logger.reportTitle = courseCode;
         asyncLib.each(filteredQuestions, (question, callback) => {
+            var currentQuiz = quizzes.find(quiz => {
+                return quiz.id === question.quiz_id;
+            });
+            var questionObj = { 'Question Number': question.position };
+            filterObjects.forEach(filterObject => {
+                if (filterObject.target.property !== 'answers') {
+                    questionObj[filterObject.target.property] = question[filterObject.target.property];
+                } else {
+                    questionObj[filterObject.target.property] = question[filterObject.target.property].map(answer => {
+                        return answer.text;
+                    }).join();
+                }
+            });
             //Create the Logger report here
-            var logger = new Logger('');
-            console.log(question);
+            logger.log(`${currentQuiz.title}`, questionObj);
             callback(null);
         }, err => {
             if (err) {
-                console.error(err);
+                logger.error(err);
             }
+            logger.htmlReport('./reports');
             console.log('\nReport Created for: ' + courseCode);
         });
     });
@@ -343,8 +358,8 @@ function main(filters = []) {
             asyncLib.each(filterData[1], (courseID, callback) => {
                 getQuizQuestions(filterData[0], courseID)
                     .then(applyFilters)
-                    .then(questions => {
-                        createReport(questions, courseID);
+                    .then(questionData => {
+                        createReport(questionData[0], courseID, questionData[1], filterData[0]);
                     });
                 callback(null);
             });

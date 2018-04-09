@@ -13,8 +13,8 @@ var enquirer = new Enquirer();
 enquirer.register('checkbox', require('prompt-checkbox'));
 enquirer.register('radio', require('prompt-radio'));
 
-//Types of questions available from Canvas
-
+//These strings are for checking if the condition is a truthy or falsey question. They do not require input.
+//These are hardcoded.
 const noInputConditions = ['Has', 'Does Not'];
 
 //Question 1 - Targets
@@ -24,7 +24,7 @@ var menuQuestions = [
         message: 'Select a Target below using the spacebar:',
         type: 'radio',
         validate: input => {
-            //This uses a Not Not check to find out if the input is truthy or falsey. We want to see if input is true. 
+            //This uses a Not Not(!! = true) check to find out if the input is truthy or falsey. We want to see if the input is true. 
             //Doing 'return input' just returns a copy of input, however 'return !!input' will return a boolean true or false.
             return !!input;
         },
@@ -32,6 +32,21 @@ var menuQuestions = [
     }
 ];
 
+/*************************************************
+ *                 filterStuff()
+ * 
+ * Parameters: array, object
+ * 
+ * Description: This function takes in an array
+ * of items and the current filterObject. It
+ * calls all the conditions on the filterObject.
+ * Each condition returns true or false. If a
+ * condition returns true on an item, that item
+ * is added to the return Array. Once finished,
+ * the function returns an array of filtered items. 
+ * 
+ * Return Type: Array
+ *************************************************/
 var filterStuff = (items, filterObject) => {
     return items.filter(item => {
         return filterObject.conditions.every(condition => {
@@ -56,9 +71,10 @@ var filterStuff = (items, filterObject) => {
  * Parameters: None
  * 
  * Description: Prompts the user to select a 
- * target. The target is the part of the quiz 
+ * target. The target is which part of the quiz 
  * Questions to focus on. This function returns 
- * the selected target as a JavaScript object.
+ * the selected target as a JavaScript object
+ * wrapped in a promise.
  * 
  * Return Type: Promise
  *************************************************/
@@ -75,20 +91,16 @@ function askQuestionOne() {
  * Parameters: Object
  * 
  * Description: Prompts the user to select 
- * conditions for the target selected. If the
- * Target doesn't require conditions it returns
- * the original target. The user may choose none.
- * If the user chooses a condition(s) that does not 
- * require user input the function will return a 
- * QuizSearch object. If it does it will return 
- * the target and its current data.
+ * conditions for the target selected.
+ * The user may choose none(Just grabs all the 
+ * data for the specified target). If a condition
+ * is chosen, it will make a filterObject object
+ * and add the chosen condition(s) to the object.
+ * This function will always return a filterObject.
  * 
  * Return Type: Object
  *************************************************/
 function askQuestionTwo(target) {
-    if (!target.conditions) {
-        return target;
-    }
     //If the target is Question Type, we need the question to be a radio, otherwise it's a checkbox
     if (target.property === 'question_type') {
         //Question 2 - Question Type
@@ -147,7 +159,8 @@ function askQuestionTwo(target) {
  * 
  * Description: This function is called when the 
  * target's conditions require input from the 
- * user. Returns a QuizSearch object.
+ * user. Returns a filterObject wrapped  inside 
+ * a promise.
  * 
  * Return Type: Promise
  *************************************************/
@@ -155,6 +168,7 @@ function askQuestionThree(filterObject) {
     return new Promise((resolve) => {
         asyncLib.eachSeries(filterObject.conditions, (condition, callback) => {
             //Ask Question 3 - User Input
+            //Check if the condition requires user input
             if (noInputConditions.some(string => {
                 return condition.conditionName.includes(string);
             }) || filterObject.target.property === 'question_type') {
@@ -163,6 +177,7 @@ function askQuestionThree(filterObject) {
                 }
                 callback();
             } else {
+                //The condition does require user input.
                 var userInput = [
                     {
                         name: 'userInput',
@@ -186,6 +201,19 @@ function askQuestionThree(filterObject) {
     });
 }
 
+/*************************************************
+ *                moreFilters()
+ * 
+ * Parameters: Object
+ * 
+ * Description: Prompts the user if they would
+ * like to add another filter to the filterObjects
+ * array. Returns an array, wrapped in a promise,
+ * that contains the current filterObject and
+ * their response(Yes, No).
+ * 
+ * Return Type: Array
+ *************************************************/
 function moreFilters(filterObject) {
     return new Promise((resolve) => {
         var moreFilters = [
@@ -207,9 +235,8 @@ function moreFilters(filterObject) {
     });
 }
 
-
 /*************************************************
- *                convertCSV()
+ *                  convertCSV()
  * 
  * Parameters: String
  * 
@@ -249,7 +276,19 @@ function readFile(filterObject) {
     });
 }
 
-
+/*************************************************
+ *               getQuizQuestions()
+ * 
+ * Parameters: Object, string/number
+ * 
+ * Description: Gets the quiz questions for a
+ * given course. The course is specified by its
+ * ID. This function returns an array, wrapped in
+ * a promise, containing three items: filterObjects,
+ * questions, and quizzes.
+ * 
+ * Return Type: Promise
+ *************************************************/
 function getQuizQuestions(filterObjects, courseID) {
     return new Promise((resolve) => {
         var questionData = [];
@@ -284,6 +323,22 @@ function getQuizQuestions(filterObjects, courseID) {
     });
 }
 
+/*************************************************
+ *                applyFilters()
+ * 
+ * Parameters: Array
+ * 
+ * Description: The applyFilters function takes in
+ * an array containing two items: the filterObjects
+ * and the questions to be filtered. This function
+ * calls the filterStuff function for each
+ * filterObject. Once finished, this function 
+ * returns an array, wrapped in a promise,
+ * containing the questions and the original
+ * quizzes.
+ * 
+ * Return Type: Promise
+ *************************************************/
 function applyFilters(filterData) {
     return new Promise((resolve) => {
         var filterObjects = filterData[0];
@@ -300,6 +355,18 @@ function applyFilters(filterData) {
     });
 }
 
+/*************************************************
+ *                createReport()
+ * 
+ * Parameters: Array, string/number, array, array
+ * 
+ * Description: The create report function creates
+ * a dynamic HTML report using the Logger. It
+ * creates an object to be reported based on the
+ * amount of and which filterObjects given.
+ * 
+ * Return Type: Nothing
+ *************************************************/
 function createReport(filteredQuestions, courseID, quizzes, filterObjects) {
     canvas.get(`/api/v1/courses/${courseID}`, (err, course) => {
         var courseCode = course[0].course_code;
@@ -332,7 +399,7 @@ function createReport(filteredQuestions, courseID, quizzes, filterObjects) {
 }
 
 /*************************************************
- *                    Driver
+ *                main() - Driver
  * 
  * Calls all the necessary functions to run the
  * program. Waterfall style.

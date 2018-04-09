@@ -21,7 +21,7 @@ module.exports = {
             'Contains': conditions.answerCommentsContains,
             'Does Not Contain': conditions.answerCommentsDoesNotContain,
         },
-        property: 'answers' //I need to go one layer deaper. answer[i].comments, answer[i].comments_html
+        property: 'answers' //I'll need to go one layer deaper. answer[i].comments, answer[i].comments_html
     },
     'Question Comments': {
         conditions: {
@@ -33,7 +33,7 @@ module.exports = {
             'Does Not Contain': conditions.doesNotContain,
         },
         property: ['correct_comments', 'incorrect_comments', 'neutral_comments',
-            'correct_comments_html', 'neutral_comments_html', 'incorrect_comments_html']
+            'correct_comments_html', 'neutral_comments_html', 'incorrect_comments_html'] //All the possible locations to look for comments/feedback
     },
     'Point Value': {
         conditions: {

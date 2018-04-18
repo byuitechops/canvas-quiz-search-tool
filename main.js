@@ -301,7 +301,6 @@ function getQuizQuestions(filterObjects, courseID) {
                         return;
                     }
                     if (questions.length != 0) {
-
                         questionData.push(questions);
                     }
                     callback(null);
